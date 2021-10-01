@@ -1,17 +1,12 @@
-//EDIT 1er Juin 2021
-
 
 #include <LiquidCrystal595.h>    // include the library
 #include <AccelStepper.h>
 #include <Rotary.h>
 #include <TimerOne.h>
-//#include  <VirtualWire.h>
 #include <EEPROM.h>
 #include "param.h"
 
-// Boutons et voyants
-int Xmax = 9;
-int Ymax = 10;
+/****** Define System parameters ******/
 #define X_dir 7
 #define Y_dir 12
 #define X_step 8
@@ -24,13 +19,15 @@ int Ymax = 10;
 #define RF 11
 #define Enable A1
 
-//Constantes système
+/* Constantes système */
 #define LCDwidth 16
 #define LCDheight 2
 
-//Parametres_Arbalete
-//Parametres_PDV
+int Xmax = 9;
+int Ymax = 10;
 
+// Parametres_Arbalete
+// Parametres_PDV
 byte adr_tps_pause = 0;
 byte adr_nb_photos = 2;
 byte adr_nb_h = 4;
@@ -42,19 +39,17 @@ byte adr_accX = 14;
 byte adr_speedY = 16;
 byte adr_accY = 18;
 byte adr_tps_stab = 20;
-
+byte nb_h = 0;
+byte nb_v = 0;
 
 int tps_pause = 0;
 int nb_photos = 0;
-byte nb_h = 0;
-byte nb_v = 0;
 int nb_total;
 int dist_h = 0;
 int dist_v = 0;
 int tps_stab = 500;
 
 //Parametres_deplacements
-
 int stepspercmX = 383;
 int stepspercmY = 1430;
 
@@ -66,6 +61,7 @@ int speedY = 10000;
 int accY = 10000;
 
 bool StopPDV = false;
+
 
 // parameter_ parametre(type, val, step, min, max, name)
 parameter_ p_tps_pause("int", tps_pause, 250, 0, 30000, "TPS DE PDV");
@@ -102,19 +98,14 @@ int bLastState = 1;
 int boutonLastState = 0;
 int Menu = 0;
 int SubMenu = 0;
-boolean updatelcdMenu = true;
-boolean updatelcd = true;
+bool updatelcdMenu = true;
+bool updatelcd = true;
 
 const char* CMD_CLICK = "clic";
 const char* CMD_TEST = "test";
 //
 
 void setup() {
-  //Serial.begin(9600);
-  //Serial.println("WESH");
-
-  // initialize the pushbutton pin as an input:
-
   pinMode(OutA, INPUT);
   pinMode(OutB, INPUT);
   pinMode(Bouton, INPUT);
@@ -141,6 +132,7 @@ void setup() {
 
   //vw_set_tx_pin(RF);
   //vw_setup(2000);
+
   digitalWrite(RF, 0);
 
   ReadParameters();
@@ -154,19 +146,9 @@ void setup() {
   StepperY.setCurrentPosition(0);
   StepperX.moveTo(0);
   StepperY.moveTo(0);
-
-
 }
 
 void loop() {
-
-  // #######################################################################################
-  // ######################################                #################################
-  // ######################################                #################################
-  // ###################################### MENU PRINCIPAL #################################
-  // ######################################                #################################
-  // ######################################                #################################
-  // #######################################################################################
 
   digitalWrite(Enable, HIGH);
 
@@ -191,7 +173,7 @@ void loop() {
       case 2:
         lcd.print("<3 TEST RADIO  >");
         lcd.setCursor(6, 1);
-        lcd.print("Click");
+        lcd.print("CLICK");
         break;
       case 3:
         lcd.print("<4 PDV PHOTO   >");
@@ -251,13 +233,68 @@ void loop() {
 
 
 
-// ######################################################################################
-// ######################################               #################################
-// ######################################               #################################
-// ######################################    REGLAGES   #################################
-// ######################################               #################################
-// ######################################               #################################
-// ######################################################################################
+
+void MenuChoixStep(AccelStepper* Moteur, int PasParCm, byte* EndStop)
+{
+
+  boolean sortie = false;
+  updatelcd = true;
+  int SubMenu = 0;
+
+  int PositionEnCm = Moteur->currentPosition() / PasParCm;
+  int destination = PositionEnCm;
+
+  while (!sortie)
+  {
+
+    unsigned char result = rotary.process();
+
+    // int boutonState = digitalRead(Bouton);
+    if (updatelcd) {
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      PositionEnCm = Moteur->currentPosition() / PasParCm;
+
+      lcd.setCursor(0, 0);
+      lcd.print("MOVE TO : ");
+      lcd.print(String(destination));
+      lcd.setCursor(0, 1);
+      lcd.print("POSITION : ");
+      lcd.print(String(Moteur->currentPosition() / PasParCm));
+      updatelcd = false;
+    }
+
+    if (result == DIR_CW) {
+      destination++;
+      if (destination > 100) destination = 100;
+      updatelcd = true;
+    }
+    if (result == DIR_CCW) {
+      destination--;
+      if (destination < -100)  destination = -100;
+      updatelcd = true;
+    }
+
+    unsigned int count = 0; // pressed time !!
+
+    if ( digitalRead(Bouton) == 0) {
+
+      delay(200);
+
+      updatelcd = true;
+      // sortie = true;
+
+      // ControlleurDeplacement(Moteur, PasParCm, destination, EndStop);
+      // updatelcd = true;
+
+    }
+
+  }
+  sortie = false;
+  DeplaceMoteurAbs(Moteur, PasParCm * destination, EndStop);
+}
+
+
 
 
 void menureglages()
@@ -385,7 +422,7 @@ void pdv()
   //PAR EXEMPLE "ATTENTION, LE ZERO NEST PAS RÉGLÉ."
   //            "ARRETER PDV? <OUI> NON           "
   //SI L'UTILISATEUR CHOISIT NON, ON APPELLE SETZERO().
-  
+
   stepsX = long(p_dist_h._val) * long(stepspercmX );
   stepsY = long(p_dist_v._val) * long(stepspercmY);
   //Serial.println("Début de la prise de vue");
@@ -664,11 +701,134 @@ bool MenuPause()
 
 void  PDV()
 {
+  /*
+    digitalWrite(RF, 1);
+    delay(250);
+    digitalWrite(RF, 0);
+  */
+  int state = 0;
+  envoiMsg(state);
 
-  digitalWrite(RF, 1);
-  delay(250);
-  digitalWrite(RF, 0);
 }
+
+/*Added !!!
+  BY YM
+*/
+void envoiMsg(int state) {
+
+
+  boolean sortie = false;
+  updatelcd = true;
+  int SubMenu = 0;
+  ReadParameters();
+
+  while (sortie == false)
+  {
+    unsigned char result = rotary.process();
+    int state = digitalRead(Bouton);
+    if (updatelcd == true) {
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      // lcd.print("< PDV >");
+
+      switch (SubMenu) {
+        case 0:
+          lcd.print(centerElement("Here we Go"));
+          break;
+
+        case 1:
+          lcd.setCursor(0, 0);
+          lcd.print(centerElement("CAM 1"));
+          break;
+
+        case 2:
+          lcd.setCursor(0, 0);
+          lcd.print(centerElement("CAM 2"));
+          break;
+
+        case 3:
+          lcd.setCursor(0, 0);
+          lcd.print(centerElement("CAM 1 & 2"));
+          break;
+
+        case 4:
+          lcd.setCursor(0, 0);
+          lcd.print(centerElement("RETOUR"));
+          break;
+
+      }
+
+
+      lcd.setCursor(0, 0);
+      lcd.print("<");
+      lcd.setCursor(15, 0);
+      lcd.print(">");
+      updatelcd = false;
+    }
+
+    if (result == DIR_CW) {
+      SubMenu++;
+      if (SubMenu > 4) {
+        SubMenu = 0;
+      }
+      updatelcd = true;
+    }
+    if (result == DIR_CCW) {
+      SubMenu--;
+      if (SubMenu < 0) {
+        SubMenu = 4;
+      };
+      updatelcd = true;
+    }
+
+    if (digitalRead(Bouton) == 0)
+    {
+      delay(50);
+      digitalWrite(RF, 1);
+      delay(10);
+      switch (SubMenu) {
+
+        case 0:
+          digitalWrite(RF, 0);
+          delay(10);
+          digitalWrite(RF, 0);
+          delay(10);
+          break;
+
+        case 1:
+          digitalWrite(RF, 0);
+          delay(10);
+          digitalWrite(RF, 1);
+          delay(10);
+          break;
+
+        case 2:
+          digitalWrite(RF, 1);
+          delay(10);
+          digitalWrite(RF, 0);
+          delay(10);
+          break;
+
+        case 3:
+          digitalWrite(RF, 1);
+          delay(10);
+          digitalWrite(RF, 1);
+          delay(10);
+          break;
+
+        case 4:
+          sortie = true;
+          break;
+
+      }
+
+      lcd.setCursor(0, 1);
+      lcd.print(centerElement("DONE!"));
+      digitalWrite(RF, 0);
+    }
+  }
+}
+
 /*
   void RF_click()
   {
@@ -678,7 +838,6 @@ void  PDV()
   //Serial.println("CLICK!");
   beep();
   }
-
   void RF_test()
   {
   byte message[VW_MAX_MESSAGE_LEN];
@@ -774,86 +933,6 @@ void MenuChoixAxe() {
 }
 
 
-void MenuChoixStep(AccelStepper* Moteur, int PasParCm, byte* EndStop)
-{
-
-  boolean sortie = false;
-  updatelcd = true;
-  int SubMenu = 0;
-
-  long PositionEnCm = Moteur->currentPosition() / PasParCm;
-
-  while (!sortie)
-  {
-    unsigned char result = rotary.process();
-    int boutonState = digitalRead(Bouton);
-    if (updatelcd) {
-      lcd.clear();
-      lcd.setCursor(0, 0);
-      PositionEnCm = Moteur->currentPosition() / PasParCm;
-      switch (SubMenu)
-      {
-        case 0:
-          lcd.setCursor(0, 0);
-          lcd.print(centerElement("Move 1 cm"));
-          lcd.setCursor(0, 1);
-          lcd.print(centerElement(String(PositionEnCm)));
-          break;
-        case 1:
-          lcd.setCursor(0, 0);
-          lcd.print(centerElement("Move 10 cm"));
-          lcd.setCursor(0, 1);
-          lcd.print(centerElement(String(PositionEnCm)));
-          break;
-        case 2:
-          lcd.setCursor(0, 0);
-          lcd.print(centerElement("Move 100 cm"));
-          lcd.setCursor(0, 1);
-          lcd.print(centerElement(String(PositionEnCm)));
-          break;
-        case 3:
-          Menu_Retour();
-          break;
-      }
-      lcd.setCursor(0, 0);
-      lcd.print("<");
-      lcd.setCursor(15, 0);
-      lcd.print(">");
-      updatelcd = false;
-    }
-
-    if (result == DIR_CW) {
-      SubMenu++;
-      if (SubMenu > 3) SubMenu = 0;
-      updatelcd = true;
-    }
-    if (result == DIR_CCW) {
-      SubMenu--;
-      if (SubMenu < 0)  SubMenu = 3;
-      updatelcd = true;
-    }
-    if (boutonState == 0) {
-      delay(200);
-      updatelcd = true;
-      switch (SubMenu)
-      {
-        case 0:
-          ControlleurDeplacement(Moteur, PasParCm, 1, EndStop);
-          break;
-        case 1:
-          ControlleurDeplacement(Moteur, PasParCm, 10, EndStop);
-          break;
-        case 2:
-          ControlleurDeplacement(Moteur, PasParCm, 100, EndStop);
-          break;
-        case 3:
-          sortie = true;
-          break;
-      }
-      updatelcd = true;
-    }
-  }
-}
 
 void ArretMoteurs(AccelStepper* Moteur)
 {
