@@ -106,6 +106,9 @@ const char* CMD_TEST = "test";
 //
 
 void setup() {
+
+  Serial.begin(9600);
+
   pinMode(OutA, INPUT);
   pinMode(OutB, INPUT);
   pinMode(Bouton, INPUT);
@@ -699,6 +702,7 @@ bool MenuPause()
 // ######################################               #################################
 // ######################################################################################
 
+
 void  PDV()
 {
   /*
@@ -714,6 +718,8 @@ void  PDV()
 /*Added !!!
   BY YM
 */
+
+
 void envoiMsg(int state) {
 
 
@@ -732,8 +738,9 @@ void envoiMsg(int state) {
       // lcd.print("< PDV >");
 
       switch (SubMenu) {
+
         case 0:
-          lcd.print(centerElement("Here we Go"));
+          lcd.print(centerElement("Here we Go !"));
           break;
 
         case 1:
@@ -748,7 +755,7 @@ void envoiMsg(int state) {
 
         case 3:
           lcd.setCursor(0, 0);
-          lcd.print(centerElement("CAM 1 & 2"));
+          lcd.print(centerElement("CAM 1 + 2"));
           break;
 
         case 4:
@@ -781,53 +788,83 @@ void envoiMsg(int state) {
       updatelcd = true;
     }
 
+    int tab[4]; // 4 elments vector : Start bit=1 end bit=1; 
+
     if (digitalRead(Bouton) == 0)
-    {
-      delay(50);
+    { 
       digitalWrite(RF, 1);
       delay(10);
+      tab[0] = digitalRead(RF);
+     
       switch (SubMenu) {
 
         case 0:
-          digitalWrite(RF, 0);
-          delay(10);
-          digitalWrite(RF, 0);
-          delay(10);
-          break;
 
+            digitalWrite(RF, 0);
+            tab[1] = digitalRead(RF);
+            tab[2] = digitalRead(RF);
+            delay(20);
+            digitalWrite(RF, 1);
+            tab[3] = digitalRead(RF);
+            delay(10);
+            Serial.println(String(tab[0]) + " " + String(tab[1]) + " " + String(tab[2]) + " " + String(tab[3]));
+            break;
+         
         case 1:
-          digitalWrite(RF, 0);
-          delay(10);
-          digitalWrite(RF, 1);
-          delay(10);
-          break;
+          
+            digitalWrite(RF, 0);
+            tab[1] = digitalRead(RF);
+            delay(10);
+            digitalWrite(RF, 1);
+            tab[2] = digitalRead(RF);
+            delay(10);
+            digitalWrite(RF, 1);
+            tab[3] = digitalRead(RF);
+            delay(10);
+            Serial.println(String(tab[0]) + " " + String(tab[1]) + " " + String(tab[2]) + " " + String(tab[3]));
+            break;
+          
 
         case 2:
-          digitalWrite(RF, 1);
-          delay(10);
-          digitalWrite(RF, 0);
-          delay(10);
-          break;
+            digitalWrite(RF, 1);
+            tab[1] = digitalRead(RF);
+            delay(10);
+            digitalWrite(RF, 0);
+            tab[2] = digitalRead(RF);
+            delay(10);
+            digitalWrite(RF, 1);
+            tab[3] = digitalRead(RF);
+            delay(10);
+            Serial.println(String(tab[0]) + " " + String(tab[1]) + " " + String(tab[2]) + " " + String(tab[3]));
+            break;
+          
 
         case 3:
-          digitalWrite(RF, 1);
-          delay(10);
-          digitalWrite(RF, 1);
-          delay(10);
-          break;
+            digitalWrite(RF, 1);
+            tab[1] = digitalRead(RF);
+            delay(10);
+            digitalWrite(RF, 1);
+            tab[2] = digitalRead(RF);
+            delay(10);
+            digitalWrite(RF, 1);
+            tab[3] = digitalRead(RF);
+            delay(10);
+            Serial.println(String(tab[0]) + " " + String(tab[1]) + " " + String(tab[2]) + " " + String(tab[3]));
+            break;
+          
 
         case 4:
-          sortie = true;
-          break;
-
+            sortie = true;
+            break;
       }
-
       lcd.setCursor(0, 1);
       lcd.print(centerElement("DONE!"));
       digitalWrite(RF, 0);
     }
   }
 }
+
+
 
 /*
   void RF_click()
