@@ -1,15 +1,3 @@
-/**
-  //EDIT 1er Juin 2021
-  //EDIT 23 SEPT 2021 <- debut opto 3 et 4
-*/
-
-/**
-  //EDIT 1er Juin 2021
-  //EDIT 23 SEPT 2021 <- debut opto 3 et 4
-  
-  // EDITED 4 OCT 2021 / SERIAL COMMUNICATION OPTIMIZED
-*/
-
 #include <VirtualWire.h>
 
 /** Broches pour les LEDs */
@@ -25,7 +13,7 @@ const byte PIN_LED_B = 2;
 const byte recep = 6;
 
 /// added !
-int data[4];
+uint8_t data[4];
 #define T 10
 /** Différents messages de commande */
 
@@ -39,8 +27,8 @@ int cpttps = 0;
 int cpttpsmax = 60;
 int cpt = 1;
 
-void clearData(){
-  for (int i=0; i<4; i++){
+void clearData() {
+  for (int i = 0; i < 4; i++) {
     data[i] = 0;
   }
 }
@@ -49,10 +37,10 @@ void takephoto2cameras()
 {
 
   zeroOpto();
-  delay(200);
+  delay(10);
   digitalWrite(opto1, 1);
   digitalWrite(opto3, 1);
-  delay(200);
+  delay(50);
   digitalWrite(opto2, 1);
   digitalWrite(opto4, 1);
   delay(100);
@@ -113,11 +101,24 @@ void BEEP() {
   }
 }
 
-void Mario() {
+void BeepCamera() {
+  for (int i = 0; i < 5; i++)
+  {
+    digitalWrite(PIN_LED_R, HIGH);
+    tone(Buzzer, 2400);
+    delay(15);
+    digitalWrite(PIN_LED_R, LOW);
+    noTone(Buzzer);
+    delay(15);
+  }
+}
+
+void Mario(int t) {
+  t = 100;
   tone(Buzzer, 1976);
-  delay(100);
+  delay(t);
   tone(Buzzer, 2637);
-  delay(500);
+  delay(5*t);
   noTone(Buzzer);
 }
 
@@ -132,8 +133,16 @@ void beep()
 void flashgreen()
 {
   digitalWrite(PIN_LED_G, 1);
-  delay(10);
+  delay(5);
   digitalWrite(PIN_LED_G, 0);
+
+  /* opto 1 & opto 2 == 1 */
+  digitalWrite(opto1, 1);
+  digitalWrite(opto3, 1);
+  delay(5);
+  digitalWrite(opto1, 0);
+  digitalWrite(opto3, 0);
+  
 }
 
 void mario2()
@@ -155,23 +164,9 @@ void mario2()
   delay(575);
 }
 
-float moySignCom() {
-  uint8_t data[4];
-  float sum = 0;
-
-  for (int i = 0; i < 4; i++) {
-    data[i] = digitalRead(recep);
-    delay(9);
-  }
-  for (int i = 0; i < 4; i++) {
-    sum += (float)data[i];
-  }
-  return sum / 4;
-}
-
 
 void setup() {
-  Serial.begin(9600);
+  // Serial.begin(9600);
   //Serial.println("SALUT MA GUEULE");
   /* Met les broches des LEDs en sortie et à LOW */
   pinMode(opto1, OUTPUT);
@@ -202,8 +197,6 @@ void setup() {
 }
 
 void loop() {
-  Serial.println(digitalRead(recep));
-  delay(10);
   // On attend de recevoir un message
   //vw_wait_rx();
   //vw_wait_rx_max(60000);
@@ -222,54 +215,58 @@ void loop() {
     }
   }
 
-  if (digitalRead(recep) == 1){
-     data[0] = 1;
-     delay(11);
-     for (int i = 0; i < 3; i++) {
-      data[i+1] = digitalRead(recep);
-      delay(11); // Pour cette fonction ça ira ! dès qu'on aura 10 valeurs ça va être changé (10*i + 5) <=> T*(i+1) + T/2
+  if (digitalRead(recep) == 1) // Detection de bit de start !
+  {
+    data[0] = 1;
+    delay(T+1);
+    for (int i = 0; i < 3; i++) {
+      data[i + 1] = digitalRead(recep);
+      delay(T); // Pour cette fonction ça ira ! dès qu'on aura 10 valeurs ça va être changé (10*i + 5) <=> T*(i+1) + T/2
     }
   }
 
-  if (data[0] == 1 && data[3] == 1) {
+  if (data[0] == 1 && data[3] == 1) { // Detection de bit de start et de stop ! 
 
-    if (data[1] == 0 && data[2] == 0) {
-      Serial.println(String(data[1]) + " " + String(data[2]));
-      mario2();
+    if (data[1] == 0 && data[2] == 0) { // Visualisation des data de la tram ! 
+      // Here we Go !  
+
+      Mario(20);
     }
 
-    else if (data[1] == 0 && data[2] == 1) {
-      Serial.println(String(data[1]) + " " + String(data[2]));
+    else if (data[1] == 0 && data[2] == 1) { // 01 <=> cam 1
+
       takephoto1camera1();
       beep();
-      
+
       digitalWrite(PIN_LED_R, 0);
       digitalWrite(PIN_LED_G, 0);
       digitalWrite(PIN_LED_B, 1);
+      delay(100);
 
     }
 
-    else if (data[1] == 1 && data[2] == 0) {
-      Serial.println(String(data[1]) + " " + String(data[2]));
-      
+    else if (data[1] == 1 && data[2] == 0) { // 10 <=> cam 2
+
+
       takephoto1camera2();
       beep();
 
       digitalWrite(PIN_LED_R, 1);
+      delay(100);
       digitalWrite(PIN_LED_G, 0);
       digitalWrite(PIN_LED_B, 0);
-  
+
 
     }
 
-    else if (data[1] == 1 && data[2] == 1) {
-      Serial.println(String(data[1]) + " " + String(data[2]));
+    else if (data[1] == 1 && data[2] == 1) { // 11 2 cameras
+
 
       takephoto2cameras();
-      BEEP();
+      BeepCamera();
     }
   }
 
-  clearData(); // Turn data to Zero !!! 
+  clearData(); // Turn data to Zero !!!
 
 }
