@@ -1,4 +1,3 @@
-
 #include <LiquidCrystal595.h>    // include the library
 #include <AccelStepper.h>
 #include <Rotary.h>
@@ -22,6 +21,9 @@
 /* Constantes système */
 #define LCDwidth 16
 #define LCDheight 2
+
+/* Transmission Periode */
+#define T 10
 
 int Xmax = 9;
 int Ymax = 10;
@@ -106,9 +108,7 @@ const char* CMD_TEST = "test";
 //
 
 void setup() {
-
-  Serial.begin(9600);
-
+  
   pinMode(OutA, INPUT);
   pinMode(OutB, INPUT);
   pinMode(Bouton, INPUT);
@@ -788,75 +788,61 @@ void envoiMsg(int state) {
       updatelcd = true;
     }
 
-    int tab[4]; // 4 elments vector : Start bit=1 end bit=1; 
-
-    if (digitalRead(Bouton) == 0)
+    if (digitalRead(Bouton) == 0 )
     { 
       digitalWrite(RF, 1);
-      delay(10);
-      tab[0] = digitalRead(RF);
+      delay(T);
      
       switch (SubMenu) {
 
-        case 0:
+        case 0: // *** Here We Go *** Nothing will happen
 
             digitalWrite(RF, 0);
-            tab[1] = digitalRead(RF);
-            tab[2] = digitalRead(RF);
-            delay(20);
+            delay(2*T);
             digitalWrite(RF, 1);
-            tab[3] = digitalRead(RF);
-            delay(10);
-            Serial.println(String(tab[0]) + " " + String(tab[1]) + " " + String(tab[2]) + " " + String(tab[3]));
+            delay(T);
             break;
          
-        case 1:
+        case 1: // **** Cam 1 = 1  cam 2 = 0
           
             digitalWrite(RF, 0);
-            tab[1] = digitalRead(RF);
-            delay(10);
+            delay(T);
             digitalWrite(RF, 1);
-            tab[2] = digitalRead(RF);
-            delay(10);
+            delay(T);
             digitalWrite(RF, 1);
-            tab[3] = digitalRead(RF);
-            delay(10);
-            Serial.println(String(tab[0]) + " " + String(tab[1]) + " " + String(tab[2]) + " " + String(tab[3]));
+            delay(T);
             break;
           
 
-        case 2:
+        case 2:    // **** Cam 1 = 0  cam 2 = 1
             digitalWrite(RF, 1);
-            tab[1] = digitalRead(RF);
-            delay(10);
+            delay(T);
             digitalWrite(RF, 0);
-            tab[2] = digitalRead(RF);
-            delay(10);
+            delay(T);
             digitalWrite(RF, 1);
-            tab[3] = digitalRead(RF);
-            delay(10);
-            Serial.println(String(tab[0]) + " " + String(tab[1]) + " " + String(tab[2]) + " " + String(tab[3]));
+            delay(T);
             break;
           
 
-        case 3:
+        case 3:  // **** cam 1 = cam 2 = 1 
             digitalWrite(RF, 1);
-            tab[1] = digitalRead(RF);
-            delay(10);
+            delay(T);
             digitalWrite(RF, 1);
-            tab[2] = digitalRead(RF);
-            delay(10);
+            delay(T);
             digitalWrite(RF, 1);
-            tab[3] = digitalRead(RF);
-            delay(10);
-            Serial.println(String(tab[0]) + " " + String(tab[1]) + " " + String(tab[2]) + " " + String(tab[3]));
+            delay(T);
             break;
           
 
         case 4:
+            digitalWrite(RF, 0);
+            delay(2*T);
+            digitalWrite(RF,0);
+            delay(T);
             sortie = true;
             break;
       }
+      delay(200);
       lcd.setCursor(0, 1);
       lcd.print(centerElement("DONE!"));
       digitalWrite(RF, 0);
