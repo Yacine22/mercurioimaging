@@ -22,7 +22,7 @@ const char* CMD_TEST = "test";
 
 
 unsigned long previousMillis = 0;
-long tpsattente = 1000;
+long tpsattente = 10000;
 int cpttps = 0;
 int cpttpsmax = 60;
 int cpt = 1;
@@ -200,7 +200,7 @@ void loop() {
   // On attend de recevoir un message
   //vw_wait_rx();
   //vw_wait_rx_max(60000);
-  if (millis() - previousMillis >= tpsattente)
+  if (millis() - previousMillis >= tpsattente && digitalRead(recep) == 0)
   {
     previousMillis = millis();
     cpttps++;
