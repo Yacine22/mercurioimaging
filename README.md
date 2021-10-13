@@ -1,7 +1,10 @@
 # ARBALETE PARAMETER SETTINGS
+
 With LCD Display, several features can be activated : 
-This Code contains UI for Arbalete Features Control
+
+# This Code contains UI for Arbalete Features Control
 It Counts those Menus :
+
     - REGLAGES: Defines all Parameters to set before excuting any function, like number of pictures to take and which camera to use !
       -> TPS DE PDV : Temps de Prise de Vues
       -> TPS STAB : Temps de stabilisation
