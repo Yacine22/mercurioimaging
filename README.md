@@ -39,3 +39,8 @@ It Counts those Menus :
 
 ## MOTIONS
 - Using MGI with absolute and relative coordinates
+
+# ARBALETE SCHEMATIC
+<img src="ARBA.png"
+     alt="Markdown Monster icon"
+     style="float: left; margin-right: 15px;" />
