@@ -1,5 +1,5 @@
 # ARBALETE PARAMETER SETTINGS
-
+For Communication, we use "Rescepteur V3" ! 
 With LCD Display, several features can be activated : 
 
 # This Code contains UI for Arbalete Features Control
