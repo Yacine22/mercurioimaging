@@ -1,6 +1,6 @@
 /* 
  ---------------------------------------------------------------------------------------------------------------------------------------------------
--------------------------------- /////////////   //////////  ///     //  ////////      //        ////////       //         //     //     //    //
+                                 /////////////   //////////  ///     //  ////////      //        ////////       //         //     //     //    //
                                   //         //  //      //  // //   //  //            //        //    //        //       //      //     //    //
                                   /          //  //////////  //  //  //    /////       //        ////////         //     //       //     //    //
                                   /          //  //      //  //   // //        //      //        //    //          //   //        /////////    //
@@ -1137,8 +1137,9 @@ void MenuChoixStep(AccelStepper* Moteur, int PasParCm, byte* EndStop)
       lcd.setCursor(0, 0);
       PositionEnCm = Moteur->currentPosition() / PasParCm;
       lcd.setCursor(0, 0);
-      lcd.print("MOVE TO : ");
+      lcd.print("MOVE TO :<");
       lcd.print(String(destination));
+      lcd.print(">");
       lcd.setCursor(0, 1);
       lcd.print("POSTITION : ");
       lcd.print(String(PositionEnCm));
@@ -1166,7 +1167,7 @@ void MenuChoixStep(AccelStepper* Moteur, int PasParCm, byte* EndStop)
         lcd.print("MOVING TO:");
         lcd.setCursor(0, 1);
         lcd.print(centerElement(String(destination)));
-        long destinationenpas = destination * PasParCm;
+        long destinationenpas = long(destination) * long(PasParCm);
         DeplaceMoteurAbs(Moteur, destinationenpas, EndStop);
         updatelcd = true;
         sortie = 1;
