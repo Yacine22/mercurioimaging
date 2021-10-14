@@ -41,6 +41,6 @@ It Counts those Menus :
 - Using MGI with absolute and relative coordinates
 
 # ARBALETE SCHEMATIC
-<img src="ARBALETE.png"
-     alt="Markdown Monster icon"
+<img src="ARBALETE.PNG"
+     alt="Arbalète"
      style="float: left; margin-right: 12px;" />
