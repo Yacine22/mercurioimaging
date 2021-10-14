@@ -1126,7 +1126,7 @@ void MenuChoixStep(AccelStepper* Moteur, int PasParCm, byte* EndStop)
   updatelcd = true;
   int SubMenu = 0;
   long PositionEnCm = Moteur->currentPosition() / PasParCm;
-  int destination = PositionEnCm;
+  long destination = PositionEnCm;
 
   while (!sortie)
   {
